@@ -29,11 +29,12 @@ function AccountAccess({ userId, email }: { userId: string; email: string }) {
           if (requestError) throw requestError
           status = data?.status ?? 'incomplete'
         }
-        if (active) setAccess(status)
+        if (active) setAccess(profile.role === 'agency' && status === 'approved' ? 'agency' : status)
       } catch { if (active) setError('Impossible de vérifier votre compte. Veuillez réessayer.') }
     })()
     return () => { active = false }
   }, [userId, attempt])
+  if (access === 'agency') return <Navigate to="/agence" replace />
   if (access === 'approved') return <AccountDetails userId={userId} email={email} />
   return <AccountLayout title="Mon compte"><p className="eyebrow">VOTRE ESPACE</p><h1>Mon <em>compte.</em></h1>
     {error ? <><p role="alert" className="account-error">{error}</p><button className="text-button" onClick={() => { setError(null); setAttempt(attempt + 1) }}>Réessayer</button></> : !access ? <p role="status" className="account-loading">Vérification de votre compte…</p> : <p className="account-notice">{access === 'incomplete' ? 'Votre inscription agence est à compléter : envoyez votre registre de commerce.' : access === 'rejected' ? 'Votre demande agence a été refusée. Contactez notre équipe.' : access === 'needs_changes' ? 'Votre dossier nécessite des corrections. Contactez notre équipe.' : 'Votre demande agence est en cours de vérification.'}</p>}
