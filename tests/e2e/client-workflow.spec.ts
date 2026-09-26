@@ -114,7 +114,7 @@ test('navigateur : profil complémentaire, fichier obligatoire, chat pending et 
  await context.close()
 })
 
-test('retour de session Google : profil complémentaire, passeport requis et statut pending', async ({page}) => {
+test('retour de session Google : profil complémentaire, passeport requis et statut pending', async ({page}, info) => {
  const client = await googleUser()
  await session(page,client)
  await expect(page.getByRole('heading',{name:'Vérification de votre profil'})).toBeVisible()
@@ -123,6 +123,14 @@ test('retour de session Google : profil complémentaire, passeport requis et sta
  await page.getByLabel('Nom',{exact:true}).fill('Client')
  await page.getByLabel('Prénom',{exact:true}).fill('Google')
  await page.getByLabel('Téléphone',{exact:true}).fill('+213555123456')
+ await page.getByRole('button',{name:'Terminer mon profil',exact:true}).click()
+ await expect(page.getByText('Profil envoyé.',{exact:false})).toHaveCount(0)
+ expect(await page.locator('#passport').evaluate((input: HTMLInputElement) => input.validity.valueMissing)).toBe(true)
+ const label = (await page.locator('label[for="passport"]').boundingBox())!
+ const input = (await page.locator('#passport').boundingBox())!
+ expect(input.y).toBeGreaterThanOrEqual(label.y + label.height)
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
+ await page.locator('section[aria-labelledby="verification-title"]').screenshot({path:info.outputPath('profil-passeport.png')})
  await page.getByLabel('Téléversez votre passeport').setInputFiles({name:'google-test-passport.pdf',mimeType:'application/pdf',buffer:pdf})
  await page.getByRole('button',{name:'Terminer mon profil',exact:true}).click()
  await expect(page.getByText('Profil envoyé.',{exact:false})).toBeVisible()

@@ -3,9 +3,9 @@ import { ArrowLeft, ArrowUpRight, ShieldCheck } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useEffect } from 'react'
 
-export function AccountLayout({ children, title }: { children: ReactNode; title: string }) {
+export function AccountLayout({ children, title, auth = false }: { children: ReactNode; title: string; auth?: boolean }) {
   useEffect(() => { document.title = `${title} — SB Rental`; window.scrollTo(0, 0) }, [title])
-  return <div className="account-shell">
+  return <div className={auth ? 'account-shell auth-shell' : 'account-shell'}>
     <a href="#account-main" className="skip-link">Aller au contenu</a>
     <header className="site-header container account-header"><Link className="brand" to="/" aria-label="SB Rental, accueil">SB<span>RENTAL</span><i aria-hidden="true" /></Link><Link className="text-button" to="/"><ArrowLeft size={16} /> Retour à l’accueil</Link></header>
     <main id="account-main" className="account-layout container">

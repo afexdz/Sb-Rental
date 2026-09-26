@@ -530,6 +530,44 @@ button:disabled { cursor: default; opacity: .6; transform: none; }
   .admin-card { padding: 17px 12px; }
 }
 
+/* Auth screens keep the travel image, with a centered and balanced form column. */
+.auth-shell .account-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(32px, 5vw, 80px); }
+.auth-shell .account-panel { justify-self: center; max-width: 460px; }
+.auth-shell .account-panel > .eyebrow,
+.auth-shell .account-panel > h1,
+.auth-shell .account-intro { text-align: center; text-wrap: balance; }
+.auth-shell .account-panel h1 { font-size: clamp(2.25rem, 4vw, 3.75rem); overflow-wrap: break-word; }
+.auth-shell .account-switch { justify-content: center; text-align: center; line-height: 1.7; }
+.auth-shell .account-submit,
+.auth-shell .account-google { display: flex; justify-content: center; min-height: 56px; padding: 16px 20px; line-height: 24px; gap: 12px; }
+.auth-shell .account-google { margin-top: 16px; }
+.auth-shell .role-choice { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.auth-shell .role-card { min-width: 0; justify-content: center; text-align: center; flex-direction: column; gap: 8px; padding: 16px 8px; }
+.auth-shell .role-card span { min-width: 0; }
+.auth-shell .role-card small { line-height: 1.5; }
+.auth-shell .account-header { gap: 16px; }
+.auth-shell .account-header .text-button { text-align: right; }
+.account-field input[type=file] { min-width: 0; max-width: 100%; overflow: hidden; }
+.account-field input.visually-hidden { width: 1px; height: 1px; min-height: 0; padding: 0; border: 0; }
+.account-field input[type=file]::file-selector-button { padding: 8px 10px; margin-right: 10px; border: 1px solid var(--border); border-radius: 4px; color: var(--green); background: var(--ivory); font: inherit; cursor: pointer; }
+@media (max-width: 900px) {
+  .auth-shell .account-layout { grid-template-columns: minmax(0, 1fr); gap: 28px; padding-block: 20px 36px; }
+  .auth-shell .account-story { display: block; min-height: 240px; width: 100%; }
+  .auth-shell .account-story-top { top: 20px; left: 24px; right: 24px; }
+  .auth-shell .account-story-copy { left: 24px; right: 24px; bottom: 24px; }
+  .auth-shell .account-story-copy > .eyebrow,
+  .auth-shell .account-story-copy > p:last-child { display: none; }
+  .auth-shell .account-story h2 { font-size: clamp(2rem, 5vw, 2.75rem); margin: 0; }
+  .auth-shell .account-panel { padding-block: 8px; }
+  .auth-shell .account-panel h1 { font-size: clamp(2.1rem, 6vw, 3rem); }
+  .auth-shell .account-footer { justify-content: center; text-align: center; flex-wrap: wrap; }
+}
+@media (max-width: 400px) {
+  .auth-shell .account-story { min-height: 200px; }
+  .auth-shell .account-header { flex-wrap: wrap; justify-content: center; padding-block: 16px; }
+  .auth-shell .agency-fields { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
+
 /* Account workflow uses the same green, cream and typography as the existing forms. */
 .account-field select, .account-field textarea { width: 100%; min-width: 0; min-height: 49px; padding: 12px 14px; border: 1px solid #c9cebf; border-radius: 5px; background: #ffffffa6; color: var(--graphite); font: inherit; }
 .account-field textarea { min-height: 100px; resize: vertical; }
