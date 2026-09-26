@@ -43,7 +43,7 @@ export function ClientProfile({ userId, email }: { userId: string; email: string
     } catch (e) { setError(queryError(e, 'Impossible de terminer le profil')) }
     finally { lock.current = false; setBusy(false) }
   }
-  return <section aria-labelledby="verification-title"><h2 id="verification-title">Compléter mon profil client</h2>
+  return <section aria-labelledby="verification-title"><h2 id="verification-title">Vérification de votre profil</h2>
     <p className="account-notice">{profile?.status === 'verified' ? 'Client vérifié · réservation et acompte autorisés.' : 'Client pending · en attente de vérification. Le chat avec une agence vérifiée reste accessible.'}</p>
     {error && <p role="alert" className="account-error">{error}</p>}
     {!profile ? <button className="text-button" onClick={() => { setError(''); setAttempt(v => v + 1) }}>Actualiser le profil</button> : <form className="account-form" onSubmit={save}>

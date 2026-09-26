@@ -458,6 +458,7 @@ em { font-family: 'DM Serif Display', Georgia, serif; font-weight: 400; }
 .account-error { color: #882e25; background: #fceee8; border: 1px solid #e7c5ba; }
 .account-notice { color: #354b3f; background: #e9efdf; border: 1px solid #ced9c3; }
 .account-submit { width: 100%; justify-content: space-between; margin-top: 4px; gap: 12px; min-height: 54px; }
+.account-google { display: flex; width: 100%; min-height: 54px; margin-top: 16px; }
 button:disabled { cursor: default; opacity: .6; transform: none; }
 .account-switch { display: flex; flex-wrap: wrap; gap: 5px 9px; font-size: .8rem; color: var(--muted); margin-top: 26px; }
 .account-switch a { display: inline-flex; align-items: center; gap: 3px; color: var(--green); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }

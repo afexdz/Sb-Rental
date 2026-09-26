@@ -79,7 +79,7 @@ test('RLS : pending, consentement privé, vérification et réservation idempote
 test('navigateur : profil complémentaire, fichier obligatoire, chat pending et vérification agence', async ({page,browser},info) => {
  const client=await user(),agency=await user('agency',true)
  await session(page,client)
- await expect(page.getByRole('heading',{name:'Compléter mon profil client'})).toBeVisible()
+ await expect(page.getByRole('heading',{name:'Vérification de votre profil'})).toBeVisible()
  await expect(page.getByLabel('Téléversez votre passeport')).toHaveAttribute('required','')
  await page.getByLabel('Nom',{exact:true}).fill('Test')
  await page.getByLabel('Prénom',{exact:true}).fill('Amine')
@@ -117,7 +117,7 @@ test('navigateur : profil complémentaire, fichier obligatoire, chat pending et 
 test('retour de session Google : profil complémentaire, passeport requis et statut pending', async ({page}) => {
  const client = await googleUser()
  await session(page,client)
- await expect(page.getByRole('heading',{name:'Compléter mon profil client'})).toBeVisible()
+ await expect(page.getByRole('heading',{name:'Vérification de votre profil'})).toBeVisible()
  await expect(page.getByLabel('Email de connexion')).toHaveValue(client.email)
  await expect(page.getByLabel('Téléversez votre passeport')).toHaveAttribute('required','')
  await page.getByLabel('Nom',{exact:true}).fill('Client')

@@ -32,6 +32,23 @@ test.afterEach(async () => {
   }
 })
 
+test('inscription : boutons email et Google séparés, alignés et sans débordement', async ({ page }) => {
+  await page.goto('/inscription')
+  const emailButton = page.getByRole('button', { name: 'Créer mon compte', exact: true })
+  const googleButton = page.getByRole('button', { name: 'Continuer avec Google', exact: true })
+  const emailBox = await emailButton.boundingBox()
+  const googleBox = await googleButton.boundingBox()
+  expect(emailBox).not.toBeNull()
+  expect(googleBox).not.toBeNull()
+  expect(Math.abs(emailBox!.width - googleBox!.width)).toBeLessThanOrEqual(1)
+  expect(googleBox!.y).toBeGreaterThanOrEqual(emailBox!.y + emailBox!.height + 12)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await page.getByRole('button', { name: 'Agence', exact: false }).click()
+  await expect(page.getByText('Registre de commerce', { exact: true })).toBeVisible()
+  await expect(page.locator('#rcFile')).toHaveAttribute('required', '')
+  await expect(page.getByText('Téléversez votre passeport')).toHaveCount(0)
+})
+
 test('parcours réel : inscription, profil, actualisation, déconnexion et reconnexion', async ({ page }, info) => {
   const errors: string[] = []
   page.on('pageerror', e => errors.push(e.message))
@@ -48,6 +65,8 @@ test('parcours réel : inscription, profil, actualisation, déconnexion et recon
   const payload = await (await signupResponse).json()
   if (payload.user?.id) created.push(payload.user.id)
   await expect(page).toHaveURL(/\/mon-compte$/)
+  await expect(page.getByRole('heading', { name: 'Vérification de votre profil' })).toBeVisible()
+  await expect(page.getByLabel('Téléversez votre passeport')).toHaveAttribute('required', '')
   await expect(page.getByRole('heading', { name: 'Amine Test' })).toBeVisible()
   await expect(page.getByText(address, { exact: true })).toBeVisible()
   await page.getByLabel('Nom complet', { exact: true }).fill('Amine Modifié')
