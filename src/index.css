@@ -528,3 +528,17 @@ button:disabled { cursor: default; opacity: .6; transform: none; }
   .admin-header { align-items: flex-start; flex-direction: column; }
   .admin-card { padding: 17px 12px; }
 }
+
+/* Account workflow uses the same green, cream and typography as the existing forms. */
+.account-field select, .account-field textarea { width: 100%; min-width: 0; min-height: 49px; padding: 12px 14px; border: 1px solid #c9cebf; border-radius: 5px; background: #ffffffa6; color: var(--graphite); font: inherit; }
+.account-field textarea { min-height: 100px; resize: vertical; }
+.account-field select:focus, .account-field textarea:focus { border-color: var(--green); }
+.account-panel section { margin-top: 32px; padding-top: 24px; border-top: 1px solid #c9cebf; min-width: 0; }
+.account-panel section h2 { margin-bottom: 16px; font-size: 1.35rem; }
+.account-panel section h3 { margin-block: 20px 12px; }
+.account-panel section .agency-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-block: 14px; }
+.account-panel section article { padding-block: 12px; border-bottom: 1px solid #c9cebf; }
+.account-panel section article p { overflow-wrap: anywhere; }
+.account-panel ol[aria-label], .agency-panel ol[aria-label] { list-style: none; margin: 16px 0; padding: 0; }
+.account-panel ol[aria-label] li, .agency-panel ol[aria-label] li { padding: 12px; margin-block: 8px; background: #ffffff99; border-radius: 5px; }
+.account-panel input[type=file] { font-size: .85rem; }

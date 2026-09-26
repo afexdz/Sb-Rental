@@ -12,6 +12,7 @@ export function Overview() {
   const period = (['day', 'week', 'month', 'year'].includes(filter.get('periode')) ? filter.get('periode') : 'month') as Period
   const anchor = /^\d{4}-\d{2}-\d{2}$/.test(filter.get('date')) ? filter.get('date') : today()
   const finance = financials(data.payments), pendingAgencies = data.agencies.filter(a => a.status === 'pending').length
+  if (Object.keys(data.errors ?? {}).length) return <><PageHeader title="Statistiques indisponibles" description="Les indicateurs ne peuvent pas être calculés tant que certaines données ne sont pas chargées. Consultez les erreurs ci-dessus et réessayez." /></>
   return <><PageHeader title="La plateforme, en un regard." description="L’activité de SB Rental, des premières demandes aux paiements confirmés." /><div className="bo-overview-intro"><span className="bo-live"><i /> Données de votre plateforme</span><span>Indicateurs cumulés · Dinar algérien</span></div>
     <StatCards items={[
       { label: 'Chiffre d’affaires réservé', value: money(booked(data.reservations)), note: 'Réservations confirmées, hors annulations', icon: Wallet, accent: true },

@@ -1,0 +1,11 @@
+begin read only;
+select set_config('audit.counts',jsonb_build_object('profiles',(select count(*) from public.profiles),'agency_requests',(select count(*) from public.agency_requests),'vehicles',(select count(*) from public.vehicles),'reservations',(select count(*) from public.reservations),'payments',(select count(*) from public.payments),'conversations',(select count(*) from public.conversations),'messages',(select count(*) from public.conversation_messages),'audit_logs',(select count(*) from public.admin_audit_logs))::text,true);
+select set_config('audit.binding',coalesce((select jsonb_build_object('email',u.email,'confirmed',u.email_confirmed_at is not null,'bound',a.user_id=u.id,'account_status',p.account_status)::text from auth.users u left join public.app_admins a on a.user_id=u.id left join public.profiles p on p.id=u.id where lower(u.email)='sbrentalsupport@gmail.com'),'{}'),true);
+select set_config('audit.rls',(select jsonb_object_agg(c.relname,c.relrowsecurity)::text from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r'),true);
+select 'policies' as audit, tablename,policyname,cmd,qual,with_check from pg_policies where schemaname='public' order by tablename,policyname;
+select 'buckets' as audit,id,public from storage.buckets;
+select set_config('request.jwt.claim.sub',coalesce((select id::text from auth.users where lower(email)='sbrentalsupport@gmail.com'),''),true);
+set local role authenticated;
+select 'admin_authorized' as audit,public.is_admin() as allowed;
+select public.is_admin() as admin_authorized,current_setting('audit.counts')::jsonb as actual_counts,current_setting('audit.binding')::jsonb as admin_binding,current_setting('audit.rls')::jsonb as rls,jsonb_build_object('profiles',(select count(*) from public.profiles),'agencies',(select count(*) from public.agency_requests),'vehicles',(select count(*) from public.vehicles),'reservations',(select count(*) from public.reservations),'payments',(select count(*) from public.payments),'conversations',(select count(*) from public.conversations),'messages',(select count(*) from public.conversation_messages),'audit',(select count(*) from public.admin_audit_logs)) as result;
+rollback;

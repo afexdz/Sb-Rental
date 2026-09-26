@@ -13,7 +13,7 @@ export function useAdminData() {
     void readAdminData(controller.signal).then(result => {
       if (controller.signal.aborted) return
       setData(result); setDenied(!result); setError('')
-    }).catch(() => { if (!controller.signal.aborted) { setData(null); setError('Impossible de charger le back-office. Vérifiez Supabase et les migrations, puis réessayez.') } })
+    }).catch((failure) => { if (!controller.signal.aborted) { setData(null); setError(failure instanceof Error ? failure.message : 'Impossible de charger le back-office. Vérifiez votre connexion et réessayez.') } })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
   }, [revision])

@@ -27,7 +27,7 @@ async function account(role: 'client' | 'agency' = 'agency', admin = false) {
 async function sendRequest(agency: Awaited<ReturnType<typeof account>>, businessName: string) {
   const path = `${agency.id}/${randomUUID()}.png`
   expect((await agency.api.storage.from('agency-documents').upload(path, image, { contentType: 'image/png' })).error).toBeNull()
-  const request = { profile_id: agency.id, business_name: businessName, rc_number: 'RC-2026', document_path: path }
+  const request = { profile_id: agency.id, business_name: businessName, rc_number: `RC-${agency.id}`, document_path: path }
   expect((await agency.api.from('agency_requests').insert(request)).error).toBeNull()
   return request
 }
@@ -36,7 +36,7 @@ async function fillAgency(page: Page, email: string, businessName: string) {
   await page.getByRole('button', { name: 'Agence Je propose mes véhicules' }).click()
   await page.getByLabel('Nom complet du responsable', { exact: true }).fill('Responsable Test')
   await page.getByLabel('Nom de l’agence', { exact: true }).fill(businessName)
-  await page.getByLabel('Numéro du registre de commerce', { exact: true }).fill('RC-2026')
+  await page.getByLabel('Numéro du registre de commerce', { exact: true }).fill(`RC-${randomUUID()}`)
   await page.locator('#rcFile').setInputFiles(file)
   await page.getByLabel('Adresse e-mail', { exact: true }).fill(email)
   await page.getByLabel('Mot de passe', { exact: true }).fill(password)
@@ -56,6 +56,7 @@ async function adminLogin(page: Page, email: string) {
   await page.getByRole('button', { name: 'Ouvrir le dashboard' }).click()
 }
 test.afterEach(async () => {
+  if (process.env.SB_E2E_ALLOW_CLEANUP !== '1') { created.clear(); return }
   for (const id of created) {
     const agency = await service.from('agency_requests').select('id').eq('profile_id', id)
     if (agency.data?.length) await service.from('admin_audit_logs').delete().in('entity_id', agency.data.map(a => a.id))
@@ -93,7 +94,8 @@ test('registre réel, statistiques, annuaire, approbation et refus dans /admin',
   await page.screenshot({ path: info.outputPath('admin.png'), fullPage: true })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await page.goto('/admin/agences')
-  const approvalRow = page.getByRole('row').filter({ hasText: 'Agence à approuver' })
+  await page.getByRole('searchbox').fill(email)
+  const approvalRow = page.getByRole('row').filter({ hasText: email })
   const popupPromise = page.waitForEvent('popup')
   await approvalRow.getByRole('button', { name: 'Voir le fichier' }).click()
   const popup = await popupPromise
@@ -111,7 +113,8 @@ test('registre réel, statistiques, annuaire, approbation et refus dans /admin',
   await page.getByRole('button', { name: 'Enregistrer la décision' }).click()
   await expect(page.getByText('Approuvée', { exact: true })).toBeVisible()
   await page.goto('/admin/agences')
-  const rejectRow = page.getByRole('row').filter({ hasText: 'Agence à refuser' })
+  await page.getByRole('searchbox').fill(second.email)
+  const rejectRow = page.getByRole('row').filter({ hasText: second.email })
   await rejectRow.getByRole('link', { name: 'Examiner le dossier' }).click()
   await page.getByRole('button', { name: 'Refuser', exact: true }).click()
   await page.getByLabel('Motif / note').fill('Document de test non conforme')
@@ -133,7 +136,7 @@ test('registre réel, statistiques, annuaire, approbation et refus dans /admin',
   await page.getByLabel('Adresse e-mail', { exact: true }).fill(second.email)
   await page.getByLabel('Mot de passe', { exact: true }).fill(password)
   await page.getByRole('button', { name: 'Me connecter', exact: true }).click()
-  await expect(page.getByText('Votre demande agence a été refusée. Contactez notre équipe pour la corriger.')).toBeVisible()
+  await expect(page.getByText('Votre demande agence a été refusée. Vous pouvez corriger votre dossier ci-dessous.')).toBeVisible()
 })
 
 test('échec du registre : reprise après actualisation sans recréer le compte ni doubler le fichier', async ({ page }) => {
@@ -151,10 +154,10 @@ test('échec du registre : reprise après actualisation sans recréer le compte 
   await page.getByRole('link', { name: 'Compléter mon dossier' }).click()
   await expect(page.getByText('Votre compte agence est créé. Complétez l’envoi du registre ci-dessous.')).toBeVisible()
   await page.getByLabel('Nom de l’agence', { exact: true }).fill('Agence reprise')
-  await page.getByLabel('Numéro du registre de commerce', { exact: true }).fill('RC-2026')
+  await page.getByLabel('Numéro du registre de commerce', { exact: true }).fill(`RC-${randomUUID()}`)
   await page.locator('#rcFile').setInputFiles(file)
   let insertAttempts = 0
-  await page.route('**/rest/v1/agency_requests*', route => {
+  await page.route('**/rest/v1/rpc/submit_agency_request', route => {
     if (route.request().method() !== 'POST') return route.continue()
     insertAttempts++
     return insertAttempts === 1 ? route.fulfill({ status: 400, contentType: 'application/json', body: '{"message":"unavailable"}' }) : route.continue()
@@ -191,5 +194,131 @@ test('droits réels : aucun auto-admin, aucune auto-approbation, documents priv�
     expect((await a.api.from('profiles').select('role').single()).data?.role).toBe('agency')
     expect((await regular.api.from('customer_profiles').update({ full_name: 'Nom synchronisé' }).eq('id', regular.id)).error).toBeNull()
     expect((await regular.api.from('profiles').select('full_name').single()).data?.full_name).toBe('Nom synchronisé')
-  } finally { expect((await service.from('app_admins').delete().eq('email', a.email)).error).toBeNull() }
+  } finally { if (process.env.SB_E2E_ALLOW_CLEANUP === '1') expect((await service.from('app_admins').delete().eq('email', a.email)).error).toBeNull() }
 })
+
+const emailConflictMessage = 'Impossible de créer ce compte avec ces informations. Vérifiez l’adresse e-mail ou utilisez la connexion.'
+const rcConflictMessage = 'Ce registre de commerce est déjà associé à une autre agence. Vérifiez le numéro saisi.'
+const submission = (request: { business_name: string; rc_number: string; document_path: string }) => ({ p_business_name: request.business_name, p_rc_number: request.rc_number, p_document_path: request.document_path })
+async function totals() {
+  const result: Record<string, number | null> = {}
+  for (const table of ['profiles', 'customer_profiles', 'agency_requests']) {
+    const { error, count } = await service.from(table).select('*', { count: 'exact', head: true })
+    expect(error).toBeNull(); result[table] = count
+  }
+  return result
+}
+
+test('RC : unicité normalisée réelle, correction propre et reprise idempotente', async () => {
+  const a = await account(), b = await account(), regular = await account('client')
+  const request = await sendRequest(a, 'Agence RC A')
+  const canonical = request.rc_number.replaceAll('-', '').toLowerCase()
+  const alternative = ` ${canonical.slice(0, 8)} / ${canonical.slice(8, 20)}.${canonical.slice(20)} `
+  const bPath = `${b.id}/${randomUUID()}.png`
+  expect((await b.api.storage.from('agency-documents').upload(bPath, image, { contentType: 'image/png' })).error).toBeNull()
+  const args = submission({ ...request, rc_number: alternative, document_path: bPath })
+  const duplicate = await b.api.rpc('submit_agency_request', args)
+  expect(duplicate.error?.code).toBe('23505')
+  expect(duplicate.error?.message).toContain('agency_requests_rc_normalized_key')
+  // The constraint also protects clients bypassing the RPC.
+  expect((await b.api.from('agency_requests').insert({ ...request, profile_id: b.id, document_path: bPath, rc_number: alternative })).error?.code).toBe('23505')
+  expect((await b.api.from('agency_requests').select('id')).data).toEqual([])
+  const before = await a.api.from('agency_requests').select('*').single()
+  expect(before.error).toBeNull()
+  const ownCorrection = await a.api.rpc('submit_agency_request', submission({ ...request, rc_number: alternative, business_name: 'Agence RC corrigée' }))
+  expect(ownCorrection.error).toBeNull(); expect(ownCorrection.data).toBe(before.data.id)
+  expect((await a.api.from('agency_requests').select('id')).data).toEqual([{ id: before.data.id }])
+  // A replay of an already-approved dossier must preserve the decision and audit.
+  expect((await service.from('agency_requests').update({ status: 'approved', admin_note: 'Validé', reviewed_at: new Date().toISOString() }).eq('profile_id', a.id)).error).toBeNull()
+  const approved = await a.api.from('agency_requests').select('*').single()
+  const auditBefore = await service.from('admin_audit_logs').select('id').eq('entity_id', before.data.id)
+  expect((await a.api.rpc('submit_agency_request', submission(approved.data))).error).toBeNull()
+  expect((await a.api.from('agency_requests').select('*').single()).data).toEqual(approved.data)
+  expect((await service.from('admin_audit_logs').select('id').eq('entity_id', before.data.id)).data).toEqual(auditBefore.data)
+  // The owner can amend the dossier; it returns to review with the same ID.
+  expect((await a.api.rpc('submit_agency_request', submission({ ...approved.data, business_name: 'Agence RC révisée' }))).error).toBeNull()
+  expect((await a.api.from('agency_requests').select('id,status,admin_note,reviewed_at').single()).data).toEqual({ id: before.data.id, status: 'pending', admin_note: null, reviewed_at: null })
+  expect((await b.api.rpc('submit_agency_request', submission({ ...request, rc_number: `B-${b.id}` }))).error?.code).toBe('42501')
+  expect((await regular.api.rpc('submit_agency_request', args)).error?.code).toBe('42501')
+  expect((await client().rpc('submit_agency_request', args)).error).toBeTruthy()
+  expect((await service.from('profiles').update({ account_status: 'suspended' }).eq('id', b.id)).error).toBeNull()
+  expect((await b.api.rpc('submit_agency_request', args)).error?.code).toBe('42501')
+})
+
+test('RC : deux inscriptions simultanées ne créent jamais deux dossiers équivalents', async () => {
+  const a = await account(), b = await account()
+  const rc = `CONCURRENT-${randomUUID()}`
+  const args = []
+  for (const agency of [a, b]) {
+    const path = `${agency.id}/${randomUUID()}.png`
+    expect((await agency.api.storage.from('agency-documents').upload(path, image, { contentType: 'image/png' })).error).toBeNull()
+    args.push({ p_business_name: 'Agence simultanée', p_rc_number: agency === a ? rc : rc.toLowerCase().replaceAll('-', ' / '), p_document_path: path })
+  }
+  const results = await Promise.all([a.api.rpc('submit_agency_request', args[0]), b.api.rpc('submit_agency_request', args[1])])
+  expect(results.filter(r => !r.error)).toHaveLength(1)
+  expect(results.find(r => r.error)?.error?.code).toBe('23505')
+  const winner = results[0].error ? b : a, winnerArgs = results[0].error ? args[1] : args[0]
+  const replays = await Promise.all([winner.api.rpc('submit_agency_request', winnerArgs), winner.api.rpc('submit_agency_request', winnerArgs)])
+  expect(replays.every(r => !r.error)).toBe(true)
+  expect(replays[0].data).toBe(replays[1].data)
+  expect((await service.from('agency_requests').select('id').in('profile_id', [a.id, b.id])).data).toHaveLength(1)
+})
+
+test('formulaire : conflit RC lisible, correction du numéro puis modification du dossier existant', async ({ page }) => {
+  const a = await account(), b = await account()
+  const first = await sendRequest(a, 'Agence RC source')
+  await page.goto('/connexion')
+  await page.getByLabel('Adresse e-mail', { exact: true }).fill(b.email)
+  await page.getByLabel('Mot de passe', { exact: true }).fill(password)
+  await page.getByRole('button', { name: 'Me connecter', exact: true }).click()
+  await expect(page).toHaveURL(/\/inscription\?profil=agence$/)
+  await page.getByLabel('Nom de l’agence', { exact: true }).fill('Agence RC formulaire')
+  await page.getByLabel('Numéro du registre de commerce', { exact: true }).fill(first.rc_number.toLowerCase().replaceAll('-', ' / '))
+  await page.locator('#rcFile').setInputFiles(file)
+  let uploads = 0
+  page.on('request', req => { if (req.method() === 'POST' && req.url().includes('/storage/v1/object/agency-documents/')) uploads++ })
+  await page.getByRole('button', { name: 'Envoyer ma demande', exact: true }).click()
+  await expect(page.getByRole('alert')).toHaveText(rcConflictMessage)
+  expect((await b.api.from('agency_requests').select('id')).data).toEqual([])
+  await page.getByLabel('Numéro du registre de commerce', { exact: true }).fill(`RC-${b.id}`)
+  await page.getByRole('button', { name: 'Envoyer ma demande', exact: true }).click()
+  await expect(page.getByText('Votre demande est envoyée.', { exact: false })).toBeVisible()
+  expect(uploads).toBe(1)
+  const original = await b.api.from('agency_requests').select('*').single()
+  expect(original.error).toBeNull()
+  expect((await service.from('agency_requests').update({ status: 'needs_changes' }).eq('id', original.data.id)).error).toBeNull()
+  await page.goto('/connexion')
+  await page.getByLabel('Adresse e-mail', { exact: true }).fill(b.email)
+  await page.getByLabel('Mot de passe', { exact: true }).fill(password)
+  await page.getByRole('button', { name: 'Me connecter', exact: true }).click()
+  await expect(page.getByLabel('Nom de l’agence', { exact: true })).toHaveValue('Agence RC formulaire')
+  await page.getByLabel('Nom de l’agence', { exact: true }).fill('Agence corrigée')
+  await page.getByLabel('Numéro du registre de commerce', { exact: true }).fill(original.data.rc_number.toLowerCase().replaceAll('-', '.'))
+  await page.getByRole('button', { name: 'Envoyer ma demande', exact: true }).click()
+  await expect(page.getByText('Votre demande est envoyée.', { exact: false })).toBeVisible()
+  expect(uploads).toBe(1)
+  const corrected = await b.api.from('agency_requests').select('*')
+  expect(corrected.data).toHaveLength(1)
+  expect(corrected.data?.[0]).toMatchObject({ id: original.data.id, business_name: 'Agence corrigée', document_path: original.data.document_path, status: 'pending' })
+})
+
+for (const masked of [false, true]) {
+  test(`e-mail déjà utilisé : ${masked ? 'réponse Auth masquée' : 'erreur Auth réelle'}, aucun profil ni dossier créé`, async ({ page }) => {
+    const existing = await account('client')
+    const before = await totals()
+    const profileBefore = await service.from('profiles').select('*').eq('id', existing.id).single()
+    if (masked) await page.route('**/auth/v1/signup', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ id: randomUUID(), email: existing.email, identities: [], aud: 'authenticated', role: 'authenticated', created_at: new Date().toISOString() }) }))
+    let writes = 0
+    page.on('request', req => {
+      if (req.method() === 'POST' && (req.url().includes('/storage/v1/') || req.url().includes('/rest/v1/'))) writes++
+    })
+    await fillAgency(page, existing.email, 'Tentative doublon e-mail')
+    await page.getByRole('button', { name: 'Envoyer ma demande', exact: true }).click()
+    await expect(page.getByRole('alert')).toHaveText(emailConflictMessage)
+    expect(writes).toBe(0)
+    expect(await totals()).toEqual(before)
+    expect((await service.from('profiles').select('*').eq('id', existing.id).single()).data).toEqual(profileBefore.data)
+    expect((await service.from('agency_requests').select('id').eq('profile_id', existing.id)).data).toEqual([])
+    await expect(page.getByLabel('Adresse e-mail', { exact: true })).toBeVisible()
+  })
+}

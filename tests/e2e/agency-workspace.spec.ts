@@ -16,7 +16,7 @@ async function user(role = 'agency', status = 'approved') {
   const email = `sb-workspace-${randomUUID()}@example.test`
   const { data, error } = await service.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { role, full_name: 'Responsable Lot 1' } })
   expect(error).toBeNull(); const id = data.user!.id; users.push(id)
-  if (role === 'agency') expect((await service.from('agency_requests').insert({ profile_id: id, business_name: 'Agence du Littoral', rc_number: 'TEST-RC', document_path: `${id}/fixture.pdf`, status })).error).toBeNull()
+  if (role === 'agency') expect((await service.from('agency_requests').insert({ profile_id: id, business_name: 'Agence du Littoral', rc_number: `TEST-${id}`, document_path: `${id}/fixture.pdf`, status })).error).toBeNull()
   const api = publicClient(); expect((await api.auth.signInWithPassword({ email, password })).error).toBeNull()
   return { id, email, api }
 }
@@ -28,6 +28,7 @@ async function session(page: Page, account: User, path = '/agence') {
 }
 const vehicle = (id: string) => ({ agency_id: id, brand: 'Peugeot', model: '208', year: 2026, category: 'city', daily_price_cents: 450050, color: 'Blanc', active: false })
 test.afterEach(async () => {
+  if (process.env.SB_E2E_ALLOW_CLEANUP !== '1') return
   for (const id of users.splice(0)) {
     const request = await service.from('agency_requests').select('id').eq('profile_id', id).maybeSingle()
     expect(request.error).toBeNull()
@@ -93,8 +94,10 @@ test('permissions réelles : propriétaire approuvé, isolation, identifiants, p
   const publicUrl = a.api.storage.from('agency-assets').getPublicUrl(path).data.publicUrl
   expect((await fetch(publicUrl, { signal: AbortSignal.timeout(10000) })).status).toBe(200)
   expect((await service.storage.getBucket('agency-documents')).data?.public).toBe(false)
-  expect((await a.api.storage.from('agency-assets').remove([path])).error).toBeNull()
-  expect((await service.storage.from('agency-assets').list(a.id)).data).toEqual([])
+  if (process.env.SB_E2E_ALLOW_CLEANUP === '1') {
+    expect((await a.api.storage.from('agency-assets').remove([path])).error).toBeNull()
+    expect((await service.storage.from('agency-assets').list(a.id)).data).toEqual([])
+  }
   // Revocation applies to an already-issued session, without waiting for JWT expiry.
   expect((await service.from('agency_requests').update({ status: 'needs_changes' }).eq('profile_id', a.id)).error).toBeNull()
   expect((await a.api.from('vehicles').update({ active: true }).eq('id', id).select()).data).toEqual([])

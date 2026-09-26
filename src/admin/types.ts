@@ -8,4 +8,4 @@ export type Conversation = { id: string; client_id: string; agency_id: string; r
 export type Message = { id: string; conversation_id: string; sender_id: string; body: string; created_at: string }
 export type ReadReceipt = { conversation_id: string; admin_id: string; last_read_at: string }
 export type AuditLog = { id: string; admin_id: string | null; admin_email: string | null; action: string; entity_type: string; entity_id: string; before_data: Record<string, unknown>; after_data: Record<string, unknown>; created_at: string }
-export type AdminData = { profiles: Profile[]; agencies: AgencyRequest[]; vehicles: Vehicle[]; reservations: Reservation[]; payments: Payment[]; conversations: Conversation[]; messages: Message[]; reads: ReadReceipt[]; audit: AuditLog[] }
+export type AdminData = { verifications?: { client_id: string; status: 'pending' | 'verified' }[]; errors?: Record<string, string>; profiles: Profile[]; agencies: AgencyRequest[]; vehicles: Vehicle[]; reservations: Reservation[]; payments: Payment[]; conversations: Conversation[]; messages: Message[]; reads: ReadReceipt[]; audit: AuditLog[] }

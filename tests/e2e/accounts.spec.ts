@@ -25,6 +25,7 @@ async function noOverflow(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 }
 test.afterEach(async () => {
+  if (process.env.SB_E2E_ALLOW_CLEANUP !== '1') return
   for (const id of created.splice(0)) {
     const { error } = await admin.auth.admin.deleteUser(id)
     expect(error).toBeNull()
@@ -86,7 +87,7 @@ test('parcours réel : inscription, profil, actualisation, déconnexion et recon
   await page.getByLabel('Mot de passe', { exact: true }).fill(password)
   await page.getByLabel('Confirmer le mot de passe', { exact: true }).fill(password)
   await page.getByRole('button', { name: 'Créer mon compte', exact: true }).click()
-  await expect(page.getByRole('alert')).toContainText('Un compte existe déjà')
+  await expect(page.getByRole('alert')).toHaveText('Impossible de créer ce compte avec ces informations. Vérifiez l’adresse e-mail ou utilisez la connexion.')
   expect(errors).toEqual([])
 })
 

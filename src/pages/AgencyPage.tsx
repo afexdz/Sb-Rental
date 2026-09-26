@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router'
 import { CarFront, LogOut, Plus, Store } from 'lucide-react'
+import { Chat } from '../client/Chat'
 import { useAuth } from '../auth/context'
 import { AccountLayout } from '../components/AccountLayout'
 import { supabase } from '../lib/supabase'
@@ -77,6 +78,7 @@ function AgencyDashboard({ userId, name }: { userId: string; name: string }) {
           </article>)}</div>}
         </section>}
       </>}
+      <Chat userId={userId} role="agency" />
     </main><footer className="container agency-footer">SB Rental · Votre espace professionnel</footer>
   </div>
 }
