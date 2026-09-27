@@ -51,15 +51,21 @@ vercel.json             Réécriture des routes SPA
 - réécritures SPA Vercel ;
 - `npm run check` et suites E2E validés pendant l’audit ;
 - migrations Cloud appliquées et vérifiées à jour ;
+- workflow réservations : demande client → acceptation/refus par l’agence (motif obligatoire), annulation avant le début, clôture, statut `rejected`, historique `reservation_events`, onglet « Réservations » côté agence ;
 - dernier déploiement Vercel : commit `d00cd80`, statut Ready.
 
 ## Reste à faire
 
-- configurer réellement Google OAuth dans Supabase et Google Cloud ;
-- finaliser l’intégration Chargily et ses secrets de production ;
-- vérifier visuellement le logo hors de l’image hero et la version mobile ;
-- remplacer les données de démonstration par le catalogue métier ;
-- faire une recette complète en production avec les comptes autorisés.
+Chargily est exclu pour le moment (cahier des exigences du 27/09/2026).
+
+- appliquer la migration `20260927000100_reservation_workflow.sql` sur Supabase Cloud (dry-run d’abord) ;
+- configurer réellement Google OAuth + formulaire complémentaire après la première connexion ;
+- mot de passe oublié, changement de mot de passe et modification du profil ;
+- favoris et notifications (nouveaux messages, réponses aux réservations) ;
+- recherche par catégorie et prix, catalogue réel à la place des données de démonstration ;
+- statistiques côté agence ;
+- login admin pré-rempli avec `sbrentalsupport@gmail.com` ;
+- recette responsive (320 → 1440 px), domaine sbrental.fr et tests en production.
 
 ## Décisions et règles
 
@@ -72,6 +78,7 @@ vercel.json             Réécriture des routes SPA
 7. Préserver la palette et le design. Ne jamais placer le logo dans l’image hero.
 8. Toute modification doit passer par `npm run check`; les parcours sensibles par `npm run test:e2e`.
 9. Ne jamais exposer de service-role key, secret OAuth ou secret Chargily dans le client, les logs ou Git.
+10. Une réservation est créée en `request` ; seule l’agence (ou l’admin) la confirme, après vérification serveur du client, des dates et des chevauchements.
 
 ## Commandes courantes
 

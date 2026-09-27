@@ -53,6 +53,7 @@
   .agency-header .text-button { font-size: .75rem; }
   .agency-main { padding-top: 28px; }
   .agency-heading .eyebrow { font-size: .6rem; }
+  .agency-nav { flex-wrap: wrap; gap: 0 4px; }
   .agency-nav button { padding: 14px 8px; font-size: .85rem; gap: 7px; }
   .agency-panel { padding: 22px 18px; }
   .agency-form-grid, .agency-vehicles { grid-template-columns: 1fr; }

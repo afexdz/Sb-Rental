@@ -1,7 +1,7 @@
 import { BrandLogo } from '../components/BrandLogo'
 import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router'
-import { CarFront, LogOut, Plus, Store } from 'lucide-react'
+import { CalendarDays, CarFront, LogOut, Plus, Store } from 'lucide-react'
 import { Chat } from '../client/Chat'
 import { useAuth } from '../auth/context'
 import { AccountLayout } from '../components/AccountLayout'
@@ -10,6 +10,8 @@ import { loadAgency, loadShop, loadVehicles, setVehiclePublished } from '../agen
 import { agencyError, availabilities, type AgencyVehicle, type Shop } from '../agency/model'
 import { ShopForm } from '../agency/ShopForm'
 import { VehicleForm } from '../agency/VehicleForm'
+import { AgencyBookings } from '../reservations/Bookings'
+import { rpc } from '../client/api'
 import '../agency/agency.css'
 
 export function AgencyPage() {
@@ -35,7 +37,8 @@ function AgencyAccess({ userId }: { userId: string }) {
 }
 function AgencyDashboard({ userId, name }: { userId: string; name: string }) {
   const [params, setParams] = useSearchParams()
-  const section = params.get('onglet') === 'vehicules' ? 'vehicles' : 'shop'
+  const tab = params.get('onglet'), section = tab === 'vehicules' ? 'vehicles' : tab === 'reservations' ? 'bookings' : 'shop'
+  const [pendingBookings, setPendingBookings] = useState(0)
   const [shop, setShop] = useState<Shop | null>(null), [vehicles, setVehicles] = useState<AgencyVehicle[]>([])
   const [loading, setLoading] = useState(true), [loadError, setLoadError] = useState(''), [attempt, setAttempt] = useState(0)
   const [error, setError] = useState(''), [notice, setNotice] = useState('')
@@ -43,6 +46,11 @@ function AgencyDashboard({ userId, name }: { userId: string; name: string }) {
   const [formBusy, setFormBusy] = useState(false)
   const operation = useRef(false)
   useEffect(() => { document.title = 'Espace agence — SB Rental' }, [])
+  useEffect(() => {
+    let active = true
+    rpc<{ status: string }[]>('agency_list_reservations').then(rows => { if (active) setPendingBookings(rows.filter(row => row.status === 'request').length) }).catch(() => undefined)
+    return () => { active = false }
+  }, [userId])
   useEffect(() => {
     let active = true
     void Promise.all([loadShop(userId), loadVehicles(userId)]).then(([profile, cars]) => { if (active) { setShop(profile); setVehicles(cars) } }).catch(() => { if (active) setLoadError('Impossible de charger votre espace professionnel. Réessayez dans un instant.') }).finally(() => { if (active) setLoading(false) })
@@ -68,9 +76,9 @@ function AgencyDashboard({ userId, name }: { userId: string; name: string }) {
   return <div className="agency-shell"><a className="skip-link" href="#agency-main">Aller au contenu</a>
     <header className="site-header container agency-header"><BrandLogo /><div><Link className="text-button" to="/">Accueil</Link><button className="text-button" onClick={logout} disabled={!!busyId || formBusy}><LogOut size={17} /> Se déconnecter</button></div></header>
     <main id="agency-main" className="container agency-main"><div className="agency-heading"><p className="eyebrow">ESPACE PROFESSIONNEL · AGENCE APPROUVÉE</p><h1>{shop?.display_name || name}</h1><p>Votre boutique et votre flotte, au même endroit.</p></div>
-      <nav className="agency-nav" aria-label="Espace agence"><button disabled={formBusy || !!busyId} aria-current={section === 'shop' ? 'page' : undefined} onClick={() => { setParams({}); setEditing(null); setError(''); setNotice('') }}><Store size={19} /> Ma boutique</button><button disabled={formBusy || !!busyId} aria-current={section === 'vehicles' ? 'page' : undefined} onClick={() => { setParams({ onglet: 'vehicules' }); setError(''); setNotice('') }}><CarFront size={19} /> Mes véhicules <span>{vehicles.length}</span></button></nav>
+      <nav className="agency-nav" aria-label="Espace agence"><button disabled={formBusy || !!busyId} aria-current={section === 'shop' ? 'page' : undefined} onClick={() => { setParams({}); setEditing(null); setError(''); setNotice('') }}><Store size={19} /> Ma boutique</button><button disabled={formBusy || !!busyId} aria-current={section === 'vehicles' ? 'page' : undefined} onClick={() => { setParams({ onglet: 'vehicules' }); setError(''); setNotice('') }}><CarFront size={19} /> Mes véhicules <span>{vehicles.length}</span></button><button disabled={formBusy || !!busyId} aria-current={section === 'bookings' ? 'page' : undefined} onClick={() => { setParams({ onglet: 'reservations' }); setEditing(null); setError(''); setNotice('') }}><CalendarDays size={19} /> Réservations {pendingBookings > 0 && <span>{pendingBookings}</span>}</button></nav>
       {error && <p role="alert" className="account-error">{error}</p>}
-      {loading ? <p role="status" className="account-loading">Chargement de votre boutique et de votre flotte…</p> : loadError ? <div className="agency-panel"><p role="alert" className="account-error">{loadError}</p><button className="button" onClick={() => { setLoading(true); setLoadError(''); setAttempt(value => value + 1) }}>Réessayer</button></div> : section === 'shop' ? <ShopForm userId={userId} shop={shop} name={name} onSaved={setShop} onBusy={setFormBusy} /> : <>
+      {loading ? <p role="status" className="account-loading">Chargement de votre boutique et de votre flotte…</p> : loadError ? <div className="agency-panel"><p role="alert" className="account-error">{loadError}</p><button className="button" onClick={() => { setLoading(true); setLoadError(''); setAttempt(value => value + 1) }}>Réessayer</button></div> : section === 'bookings' ? <AgencyBookings onPending={setPendingBookings} /> : section === 'shop' ? <ShopForm userId={userId} shop={shop} name={name} onSaved={setShop} onBusy={setFormBusy} /> : <>
         {notice && <p role="status" className="account-notice">{notice}</p>}
         {editing ? <VehicleForm key={editing === 'new' ? 'new' : editing.id} userId={userId} vehicle={editing === 'new' ? undefined : editing} onCancel={() => setEditing(null)} onBusy={setFormBusy} onSaved={saved => { setVehicles(items => items.some(item => item.id === saved.id) ? items.map(item => item.id === saved.id ? saved : item) : [saved, ...items]); setEditing(null); setNotice('Votre véhicule a bien été enregistré.') }} /> : <section aria-labelledby="vehicles-title"><div className="agency-section-heading"><div><h2 id="vehicles-title">Mes véhicules</h2><p className="agency-muted">Le catalogue public de démonstration reste indépendant de votre flotte.</p></div><button className="button" disabled={!!busyId} onClick={() => { setEditing('new'); setError(''); setNotice('') }}><Plus size={18} /> Ajouter un véhicule</button></div>
           {!vehicles.length ? <div className="agency-empty"><CarFront size={40} /><h3>Votre flotte commence ici.</h3><p>Ajoutez votre premier véhicule, ses informations et jusqu’à trois photos.</p></div> : <div className="agency-vehicles">{vehicles.map(vehicle => <article className="agency-car" key={vehicle.id} aria-label={`${vehicle.brand} ${vehicle.model}`}>
