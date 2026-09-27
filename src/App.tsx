@@ -1,3 +1,4 @@
+import { BrandLogo } from './components/BrandLogo'
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Link, Route, Routes } from 'react-router'
 import { ArrowUpRight } from 'lucide-react'
@@ -9,7 +10,7 @@ const AgencyPage = lazy(() => import('./pages/AgencyPage').then(module => ({ def
 const HomePage = lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })))
 
 function NotFound() {
-  return <main className="not-found"><Link className="brand" to="/">SB<span>RENTAL</span></Link><p className="eyebrow">ERREUR 404</p><h1>Un petit détour.</h1><p>Cette page n’existe pas. Reprenons la bonne route.</p><Link to="/" className="button">Retour à l’accueil <ArrowUpRight size={20} /></Link></main>
+  return <main className="not-found"><BrandLogo /><p className="eyebrow">ERREUR 404</p><h1>Un petit détour.</h1><p>Cette page n’existe pas. Reprenons la bonne route.</p><Link to="/" className="button">Retour à l’accueil <ArrowUpRight size={20} /></Link></main>
 }
 
 export default function App() {

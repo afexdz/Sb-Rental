@@ -1,3 +1,4 @@
+import { BrandLogo } from '../components/BrandLogo'
 import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router'
 import { CarFront, LogOut, Plus, Store } from 'lucide-react'
@@ -65,9 +66,9 @@ function AgencyDashboard({ userId, name }: { userId: string; name: string }) {
     finally { operation.current = false; setBusyId(null) }
   }
   return <div className="agency-shell"><a className="skip-link" href="#agency-main">Aller au contenu</a>
-    <header className="site-header container agency-header"><Link className="brand" to="/" aria-label="SB Rental, accueil">SB<span>RENTAL</span></Link><div><Link className="text-button" to="/">Accueil</Link><button className="text-button" onClick={logout} disabled={!!busyId || formBusy}><LogOut size={17} /> Se déconnecter</button></div></header>
+    <header className="site-header container agency-header"><BrandLogo /><div><Link className="text-button" to="/">Accueil</Link><button className="text-button" onClick={logout} disabled={!!busyId || formBusy}><LogOut size={17} /> Se déconnecter</button></div></header>
     <main id="agency-main" className="container agency-main"><div className="agency-heading"><p className="eyebrow">ESPACE PROFESSIONNEL · AGENCE APPROUVÉE</p><h1>{shop?.display_name || name}</h1><p>Votre boutique et votre flotte, au même endroit.</p></div>
-      <nav className="agency-nav" aria-label="Espace agence"><button disabled={formBusy || !!busyId} aria-current={section === 'shop' ? 'page' : undefined} onClick={() => { setParams({}); setEditing(null); setError(''); setNotice('') }}><Store size={19} /> Ma boutique</button><button disabled={formBusy || !!busyId} aria-current={section === 'vehicles' ? 'page' : undefined} onClick={() => { setParams({ onglet: 'vehicules' }); setError(''); setNotice('') }}><CarFront size={19} /> Mes véhicules <span>{vehicles.length}</span></button></nav>
+      <nav className="agency-nav" aria-label="Espace agence"><BrandLogo compact /><button disabled={formBusy || !!busyId} aria-current={section === 'shop' ? 'page' : undefined} onClick={() => { setParams({}); setEditing(null); setError(''); setNotice('') }}><Store size={19} /> Ma boutique</button><button disabled={formBusy || !!busyId} aria-current={section === 'vehicles' ? 'page' : undefined} onClick={() => { setParams({ onglet: 'vehicules' }); setError(''); setNotice('') }}><CarFront size={19} /> Mes véhicules <span>{vehicles.length}</span></button></nav>
       {error && <p role="alert" className="account-error">{error}</p>}
       {loading ? <p role="status" className="account-loading">Chargement de votre boutique et de votre flotte…</p> : loadError ? <div className="agency-panel"><p role="alert" className="account-error">{loadError}</p><button className="button" onClick={() => { setLoading(true); setLoadError(''); setAttempt(value => value + 1) }}>Réessayer</button></div> : section === 'shop' ? <ShopForm userId={userId} shop={shop} name={name} onSaved={setShop} onBusy={setFormBusy} /> : <>
         {notice && <p role="status" className="account-notice">{notice}</p>}
@@ -79,6 +80,6 @@ function AgencyDashboard({ userId, name }: { userId: string; name: string }) {
         </section>}
       </>}
       <Chat userId={userId} role="agency" />
-    </main><footer className="container agency-footer">SB Rental · Votre espace professionnel</footer>
+    </main><footer className="container agency-footer"><BrandLogo compact /><span>Votre espace professionnel</span></footer>
   </div>
 }

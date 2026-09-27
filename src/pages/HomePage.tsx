@@ -1,3 +1,4 @@
+import { BrandLogo } from '../components/BrandLogo'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, ChevronDown, CreditCard, Globe2, KeyRound, MapPin, Menu, MessageCircle, Search, X } from 'lucide-react'
@@ -53,7 +54,7 @@ export function HomePage() {
   return <>
     <a href="#main" className="skip-link">Aller au contenu</a>
     <header className="site-header container">
-      <Link className="brand" to="/" aria-label="SB Rental, accueil">SB<span>RENTAL</span><i aria-hidden="true" /></Link>
+      <BrandLogo />
       <nav className="desktop-nav" aria-label="Navigation principale"><a href="#vehicules">Nos véhicules</a><a href="#comment-ca-marche">Comment ça marche <ArrowUpRight size={13} /></a></nav>
       <div className="header-right"><span className="locale"><Globe2 size={16} /> Algérie <span className="locale-divider">/</span> FR</span><Link to={session ? "/mon-compte" : "/connexion"} className="header-cta">{loading ? "Mon espace" : session ? "Mon compte" : "Se connecter"} <ArrowUpRight size={18} /></Link></div>
       <button className="icon-button menu-toggle" aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'} aria-expanded={menuOpen} aria-controls="mobile-nav" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X /> : <Menu />}</button>
@@ -96,7 +97,7 @@ export function HomePage() {
         <p className="journey-note">Le parcours de réservation sera disponible prochainement.</p>
       </div></section>
     </main>
-    <footer className="site-footer container"><div className="footer-main"><Link className="brand" to="/" aria-label="SB Rental, accueil">SB<span>RENTAL</span><i aria-hidden="true" /></Link><p>D’ici, allez partout.</p><a href="#rechercher">Votre prochaine route commence ici <ArrowUpRight size={18} /></a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} SB Rental</span><span>Pensé en Algérie. Pour vos envies d’ailleurs.</span><a href="#main">Retour en haut <ChevronDown size={14} className="rotate-arrow" /></a></div></footer>
+    <footer className="site-footer container"><div className="footer-main"><BrandLogo compact /><p>D’ici, allez partout.</p><a href="#rechercher">Votre prochaine route commence ici <ArrowUpRight size={18} /></a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} SB Rental</span><span>Pensé en Algérie. Pour vos envies d’ailleurs.</span><a href="#main">Retour en haut <ChevronDown size={14} className="rotate-arrow" /></a></div></footer>
     <VehicleDialog vehicle={selectedVehicle} criteria={activeSearch} onClose={() => setSelectedVehicle(null)} />
   </>
 }

@@ -581,3 +581,18 @@ button:disabled { cursor: default; opacity: .6; transform: none; }
 .account-panel ol[aria-label], .agency-panel ol[aria-label] { list-style: none; margin: 16px 0; padding: 0; }
 .account-panel ol[aria-label] li, .agency-panel ol[aria-label] li { padding: 12px; margin-block: 8px; background: #ffffff99; border-radius: 5px; }
 .account-panel input[type=file] { font-size: .85rem; }
+
+/* Keep the supplied red/black artwork at its natural aspect ratio. */
+.brand.brand-logo { display: inline-flex; flex: 0 0 auto; width: clamp(100px, 11vw, 144px); max-width: 100%; line-height: 0; }
+.brand-logo img { display: block; width: 100%; height: auto; object-fit: contain; }
+.brand.brand-logo--compact { width: 104px; }
+.brand.brand-logo--surface { background: var(--cream, #f7f7f0); padding: 8px 12px; border-radius: 8px; }
+.account-footer { flex-wrap: wrap; gap: 16px; }
+.agency-nav > .brand-logo { align-self: center; margin-right: auto; }
+.agency-footer { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+@media (max-width: 480px) {
+  .brand.brand-logo { width: 100px; }
+  .brand.brand-logo--compact { width: 84px; }
+  .agency-nav { flex-wrap: wrap; }
+  .agency-nav > .brand-logo { margin-right: 100%; margin-bottom: 8px; }
+}
