@@ -58,7 +58,6 @@ vercel.json             Réécriture des routes SPA
 
 Chargily est exclu pour le moment (cahier des exigences du 27/09/2026).
 
-- appliquer la migration `20260927000100_reservation_workflow.sql` sur Supabase Cloud (dry-run d’abord) ;
 - configurer réellement Google OAuth + formulaire complémentaire après la première connexion ;
 - mot de passe oublié, changement de mot de passe et modification du profil ;
 - favoris et notifications (nouveaux messages, réponses aux réservations) ;
