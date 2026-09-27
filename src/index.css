@@ -561,11 +561,16 @@ button:disabled { cursor: default; opacity: .6; transform: none; }
   .auth-shell .account-panel { padding-block: 8px; }
   .auth-shell .account-panel h1 { font-size: clamp(2.1rem, 6vw, 3rem); }
   .auth-shell .account-footer { justify-content: center; text-align: center; flex-wrap: wrap; }
+  .auth-shell .account-panel { text-align: center; }
+  .auth-shell .account-form, .auth-shell .account-field { text-align: left; }
+  .auth-shell .account-submit, .auth-shell .account-google { margin-inline: 0; }
 }
 @media (max-width: 400px) {
   .auth-shell .account-story { min-height: 200px; }
   .auth-shell .account-header { flex-wrap: wrap; justify-content: center; padding-block: 16px; }
   .auth-shell .agency-fields { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .auth-shell .account-submit { margin-top: 10px; }
+  .auth-shell .account-google { margin-top: 16px; }
 }
 
 /* Account workflow uses the same green, cream and typography as the existing forms. */
@@ -582,17 +587,15 @@ button:disabled { cursor: default; opacity: .6; transform: none; }
 .account-panel ol[aria-label] li, .agency-panel ol[aria-label] li { padding: 12px; margin-block: 8px; background: #ffffff99; border-radius: 5px; }
 .account-panel input[type=file] { font-size: .85rem; }
 
-/* Keep the supplied red/black artwork at its natural aspect ratio. */
+/* Keep the supplied artwork at its natural aspect ratio. */
 .brand.brand-logo { display: inline-flex; flex: 0 0 auto; width: clamp(100px, 11vw, 144px); max-width: 100%; line-height: 0; }
 .brand-logo img { display: block; width: 100%; height: auto; object-fit: contain; }
 .brand.brand-logo--compact { width: 104px; }
 .brand.brand-logo--surface { background: var(--cream, #f7f7f0); padding: 8px 12px; border-radius: 8px; }
 .account-footer { flex-wrap: wrap; gap: 16px; }
-.agency-nav > .brand-logo { align-self: center; margin-right: auto; }
 .agency-footer { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
 @media (max-width: 480px) {
   .brand.brand-logo { width: 100px; }
   .brand.brand-logo--compact { width: 84px; }
   .agency-nav { flex-wrap: wrap; }
-  .agency-nav > .brand-logo { margin-right: 100%; margin-bottom: 8px; }
 }
